@@ -44,7 +44,6 @@ read_gzip_file(Filename) ->
   Res = parse_data(open_gzip_file(Filename)),
   {nbt, Res}.
 
-% for convenience
 read_file(Filename) ->
   read_gzip_file(Filename).
 
@@ -159,8 +158,7 @@ parse_nbt_content(Type, Payload, LvlC) ->
 
 %% TYPE PARSER nesting
 
-parse_nbt_list(Payload, Name, Lvl) ->
-  <<ListType:8/unsigned-integer, Icount:32/signed-integer, Tmp/binary>> = Payload,
+parse_nbt_list(<<ListType:8/unsigned-integer, Icount:32/signed-integer, Tmp/binary>>, Name, Lvl) ->
   [Rest, Parsed] = parse_nbt_nameless(ListType, Tmp, Lvl, Icount),
   [{list, Name, Parsed}, Rest].
 
@@ -179,54 +177,40 @@ parse_nbt_compound(Payload, Name, Lvl) ->
   [Rest, Parsed] = parse_data(Payload, [], Lvl, Lvl),
   [{compound, Name, Parsed}, Rest].
 
+
 %% TYPE PARSER normal content
 
-parse_nbt_byte(Payload) ->
-  Size = 8,
-  <<Result:Size/binary-unit:1, RestLoad/binary>> = Payload,
+parse_nbt_byte(<<Result:8/binary-unit:1, RestLoad/binary>>) ->
   [{byte, Result}, RestLoad].
 
-parse_nbt_short(Payload) ->
-  Size = 16,
-  <<Result:Size/signed-integer, RestLoad/binary>> = Payload,
+parse_nbt_short(<<Result:16/signed-integer, RestLoad/binary>>) ->
   [{short, Result}, RestLoad].
 
-parse_nbt_int(Payload) ->
-  Size = 32,
-  <<Result:Size/signed-integer, RestLoad/binary>> = Payload,
+parse_nbt_int(<<Result:32/signed-integer, RestLoad/binary>>) ->
   [{int, Result}, RestLoad].
 
-parse_nbt_long(Payload) ->
-  Size = 64,
-  <<Result:Size/signed-integer, RestLoad/binary>> = Payload,
+parse_nbt_long(<<Result:64/signed-integer, RestLoad/binary>>) ->
   [{long, Result}, RestLoad].
 
-parse_nbt_float(Payload) ->
-  Size = 32,
-  <<Result:Size/float, RestLoad/binary>> = Payload,
+parse_nbt_float(<<Result:32/float, RestLoad/binary>>) ->
   [{float, Result}, RestLoad].
 
-parse_nbt_double(Payload) ->
-  Size = 64,
-  <<Result:Size/float, RestLoad/binary>> = Payload,
+parse_nbt_double(<<Result:64/float, RestLoad/binary>>) ->
   [{double, Result}, RestLoad].
 
-parse_nbt_byte_array(Payload) ->
-  <<Prefix:32/signed-integer, Tmp/binary>> = Payload,
+parse_nbt_byte_array(<<Prefix:32/signed-integer, Tmp/binary>>) ->
   Size = Prefix * 8,
   <<Bytes:Size/binary-unit:1, RestLoad/binary>> = Tmp,
   Result = binary:bin_to_list(Bytes),
   [{byte_array, Result}, RestLoad].
 
-parse_nbt_string(Payload) ->
-  <<Prefix:16/unsigned-integer, Tmp/binary>> = Payload,
+parse_nbt_string(<<Prefix:16/unsigned-integer, Tmp/binary>>) ->
   Size = Prefix * 8,
   <<String:Size/binary-unit:1, RestLoad/binary>> = Tmp,
   Result = unicode:characters_to_list(String),
   [{string, Result}, RestLoad].
 
-parse_nbt_int_array(Payload) ->
-  <<Prefix:32/signed-integer, Tmp/binary>> = Payload,
+parse_nbt_int_array(<<Prefix:32/signed-integer, Tmp/binary>>) ->
   Size = Prefix * 8,
   <<Ints:Size/binary-unit:4, RestLoad/binary>> = Tmp,
   Result = bytes_to_ints(Ints),

@@ -1,8 +1,19 @@
 -module(nbt).
 
-% -export([
-% ]).
--compile(export_all).
+-export([
+  open_plain_file/1,
+  open_gzip_file/1,
+
+  read_file/1,
+  read_plain_file/1,
+  read_gzip_file/1,
+
+  unconsult/2,
+  consult/1,
+
+  parse_data/1
+]).
+
 
 %% OPEN AND READ FILE
 
@@ -14,18 +25,15 @@ open_gzip_file(Filename) ->
   {ok, Bin} = file:read_file(Filename),
   zlib:gunzip(Bin).
 
-open_zip_file(Filename) ->
-  {ok, Bin} = file:read_file(Filename),
-  zlib:unzip(Bin).
-
-open_zlib_file(Filename) ->
-  {ok, Bin} = file:read_file(Filename),
-  Z = zlib:open(),
-  ok = zlib:inflateInit(Z),
-  Raw = zlib:inflate(Z, Bin),
-  ok = zlib:inflateEnd(Z),
-  ok = zlib:close(Z),
-  Raw.
+%%% @FIXME NOT TESTED!
+% open_zlib_file(Filename) ->
+%   {ok, Bin} = file:read_file(Filename),
+%   Z = zlib:open(),
+%   ok = zlib:inflateInit(Z),
+%   Raw = zlib:inflate(Z, Bin),
+%   ok = zlib:inflateEnd(Z),
+%   ok = zlib:close(Z),
+%   Raw.
 
 read_file(Filename) ->
   read_plain_file(Filename).
@@ -38,22 +46,22 @@ read_gzip_file(Filename) ->
   Res = parse_data(open_gzip_file(Filename)),
   {nbt, Res}.
 
-read_zip_file(Filename) ->
-  Res = parse_data(open_zip_file(Filename)),
-  {nbt, Res}.
-
-read_zlib_file(Filename) ->
-  Res = parse_data(open_zlib_file(Filename)),
-  {nbt, Res}.
+% read_zlib_file(Filename) ->
+%   Res = parse_data(open_zlib_file(Filename)),
+%   {nbt, Res}.
 
 %% HELPER
 
 % writing erlang io list in readable format to file
-% can be reimported by file:consult/1
-unconsult(File, L) ->
+% can be reimported by nbt:consult/1
+unconsult(File, List) ->
   {ok, S} = file:open(File, write),
-  lists:foreach(fun(X) -> io:format(S, "~p.~n" ,[X]) end, L),
+  lists:foreach(fun(X) -> io:format(S, "~p.~n" ,[X]) end, List),
   file:close(S).
+
+% for convenience
+consult(Filename) ->
+  file:consult(Filename).
 
 %% PARSE DATA
 

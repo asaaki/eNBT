@@ -124,14 +124,13 @@ parse_data(Data, Parsed, LvlP, LvlC) ->
 
 parse_nbt_type(<<>>) ->
   {0, <<>>};
-parse_nbt_type(Payload) ->
+parse_nbt_type(<<Type:8/unsigned-integer, RestLoad/binary>>) ->
   <<Type:8/unsigned-integer, RestLoad/binary>> = Payload,
   {Type, RestLoad}.
 
 parse_nbt_name(<<>>) ->
   [eof,<<>>];
-parse_nbt_name(Payload) ->
-  <<Nlen:16/unsigned-integer, Tmp/binary>> = Payload,
+parse_nbt_name(<<Nlen:16/unsigned-integer, Tmp/binary>>) ->
   Size = Nlen * 8,
   <<Name:Size/binary-unit:1, RestLoad/binary>> = Tmp,
   {Name, RestLoad}.

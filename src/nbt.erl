@@ -25,16 +25,6 @@ open_gzip_file(Filename) ->
   {ok, Bin} = file:read_file(Filename),
   zlib:gunzip(Bin).
 
-%%% @FIXME NOT TESTED!
-% open_zlib_file(Filename) ->
-%   {ok, Bin} = file:read_file(Filename),
-%   Z = zlib:open(),
-%   ok = zlib:inflateInit(Z),
-%   Raw = zlib:inflate(Z, Bin),
-%   ok = zlib:inflateEnd(Z),
-%   ok = zlib:close(Z),
-%   Raw.
-
 
 read_plain_file(Filename) ->
   Res = parse_data(open_plain_file(Filename)),
@@ -47,9 +37,6 @@ read_gzip_file(Filename) ->
 read_file(Filename) ->
   read_gzip_file(Filename).
 
-% read_zlib_file(Filename) ->
-%   Res = parse_data(open_zlib_file(Filename)),
-%   {nbt, Res}.
 
 %% HELPER
 
@@ -169,8 +156,7 @@ parse_nbt_nameless(_Type, RestLoad, _, 0, Acc) ->
 parse_nbt_nameless(Type, Payload, Lvl, Icount, Acc) ->
   [Value, Rest] = parse_nbt_content(Type, Payload, Lvl),
   NewIcount = Icount - 1,
-  NewAcc = [Value|Acc],
-  parse_nbt_nameless(Type, Rest, Lvl, NewIcount, NewAcc).
+  parse_nbt_nameless(Type, Rest, Lvl, NewIcount, [Value|Acc]).
 
 parse_nbt_compound(Payload, Name, Lvl) ->
   [Rest, Parsed] = parse_data(Payload, [], Lvl, Lvl),

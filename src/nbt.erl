@@ -35,8 +35,6 @@ open_gzip_file(Filename) ->
 %   ok = zlib:close(Z),
 %   Raw.
 
-read_file(Filename) ->
-  read_plain_file(Filename).
 
 read_plain_file(Filename) ->
   Res = parse_data(open_plain_file(Filename)),
@@ -46,6 +44,10 @@ read_gzip_file(Filename) ->
   Res = parse_data(open_gzip_file(Filename)),
   {nbt, Res}.
 
+% for convenience
+read_file(Filename) ->
+  read_gzip_file(Filename).
+
 % read_zlib_file(Filename) ->
 %   Res = parse_data(open_zlib_file(Filename)),
 %   {nbt, Res}.
@@ -54,14 +56,16 @@ read_gzip_file(Filename) ->
 
 % writing erlang io list in readable format to file
 % can be reimported by nbt:consult/1
-unconsult(File, List) ->
+unconsult(File, NBTdata) ->
   {ok, S} = file:open(File, write),
-  lists:foreach(fun(X) -> io:format(S, "~p.~n" ,[X]) end, List),
+  {nbt, Data} = NBTdata,
+  lists:foreach(fun(X) -> io:format(S, "~p.~n" ,[X]) end, Data),
   file:close(S).
 
 % for convenience
 consult(Filename) ->
-  file:consult(Filename).
+  {ok, Data} = file:consult(Filename),
+  {nbt, Data}.
 
 %% PARSE DATA
 
@@ -113,8 +117,8 @@ parse_data(Data, Parsed, LvlP, LvlC) ->
     T ->
       %% EVERYTHING ELSE
       {Name, Payload} = parse_nbt_name(Data0),
-      [Content, Rest] = parse_nbt_content(T, Payload, LvlC),
-      Node = {node, Name, Content},
+      [{Ctype, Cdata}, Rest] = parse_nbt_content(T, Payload, LvlC),
+      Node = {Ctype, Name, Cdata},
       NewParsed = P++[Node],
       parse_data(Rest, NewParsed, LvlP, LvlC)
   end.

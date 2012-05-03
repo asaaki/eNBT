@@ -49,5 +49,5 @@ ConsultedData = nbt:consult("path/to/file.nrl").
 
 + refactoring!!!
 + writing a nbt file from erlang tuple
-+ parser for MC region files in `Anvil file format` (*.mcr)
++ parser for MC region files in `Anvil file format` (*.mca)
 + did I mention refactoring?

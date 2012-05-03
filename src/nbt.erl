@@ -13,7 +13,7 @@
 
   parse_data/1
 ]).
-
+-compile(export_all).
 
 %% OPEN AND READ FILE
 
@@ -112,7 +112,6 @@ parse_data(Data, Parsed, LvlP, LvlC) ->
 parse_nbt_type(<<>>) ->
   {0, <<>>};
 parse_nbt_type(<<Type:8/unsigned-integer, RestLoad/binary>>) ->
-  <<Type:8/unsigned-integer, RestLoad/binary>> = Payload,
   {Type, RestLoad}.
 
 parse_nbt_name(<<>>) ->
@@ -197,12 +196,12 @@ parse_nbt_string(<<Prefix:16/unsigned-integer, Tmp/binary>>) ->
 
 parse_nbt_int_array(<<Prefix:32/signed-integer, Tmp/binary>>) ->
   Size = Prefix * 8,
-  <<Ints:Size/binary-unit:4, RestLoad/binary>> = Tmp,
-  Result = bytes_to_ints(Ints),
+  <<IntBytes:Size/binary-unit:4, RestLoad/binary>> = Tmp,
+  Result = bytes_to_ints(IntBytes),
   [{int_array, Result}, RestLoad].
 
 bytes_to_ints(Bytes) ->
   case parse_nbt_int(Bytes) of
-    {Int, <<>>} -> [Int];
-    {Int, Rest} -> [Int|bytes_to_ints(Rest)]
+    [Int, <<>>] -> [Int];
+    [Int, Rest] -> [Int|bytes_to_ints(Rest)]
   end.
